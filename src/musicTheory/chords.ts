@@ -5,7 +5,7 @@ import type {
   Scale,
   ScaleDegree,
 } from "../types/music";
-import { midiNote } from "./notes";
+import { midiNote, mod, noteIndex } from "./notes";
 import { DEGREE_TYPES, generateScale } from "./scales";
 export const FORMULAS: Record<ChordType, number[]> = {
   major: [0, 4, 7],
@@ -35,13 +35,21 @@ export function generateChord(
   root: Note,
   type: ChordType = "major",
   octave = 4,
+  bass?: Note,
 ): Chord {
   return {
     root,
     type,
-    name: root + SUFFIX[type],
+    ...(bass ? { bass } : {}),
+    name: root + SUFFIX[type] + (bass ? `/${bass}` : ""),
     notes: FORMULAS[type].map((n) => midiNote(root, octave) + n),
   };
+}
+/** Place the written bass strictly below all upper voices, including inversions. */
+export function chordBassMidi(chord: Chord, upper = chord.notes): number {
+  const lowest = Math.min(...upper);
+  const distance = mod(lowest - noteIndex(chord.bass ?? chord.root));
+  return lowest - (distance || 12);
 }
 export function degreeChord(
   key: Note,

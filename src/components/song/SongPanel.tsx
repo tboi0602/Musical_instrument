@@ -15,18 +15,21 @@ import {
   PROGRESSIONS,
   resolveSongChord,
 } from "../../musicTheory/progressions";
-import { ROMANS, KEYBOARD } from "../../musicTheory/scales";
-import { degreeChord, SUFFIX } from "../../musicTheory/chords";
+import { ROMANS } from "../../musicTheory/scales";
+import { SUFFIX } from "../../musicTheory/chords";
 import { NOTES } from "../../musicTheory/notes";
 import { playChord } from "../keyboard/ChordKeyboard";
+import { LyricsEditor } from "./LyricsEditor";
+import { playableChords } from "../../musicTheory/keyboard";
 import type { Note, Scale, Song, TimeSignature } from "../../types/music";
 function draftOf(song: Song) {
   return song.sections.map((section) => ({
     name: section.name,
+    lyrics: section.lyrics ?? "",
     text: section.chords
       .map(
         (c) =>
-          `${c.degree !== undefined ? ROMANS[song.scale][c.degree] : c.root! + SUFFIX[c.type!]}${c.bars === 1 ? "" : `:${c.bars}`}`,
+          `${c.degree !== undefined ? ROMANS[song.scale][c.degree] : c.root! + SUFFIX[c.type!]}${c.bass ? `/${c.bass}` : ""}${c.bars === 1 ? "" : `:${c.bars}`}`,
       )
       .join(" | "),
   }));
@@ -58,12 +61,10 @@ export function SongPanel() {
   const current = Math.min(position, entries.length - 1);
   const next = entries[(current + 1) % entries.length];
   function keyboardFor(name: string) {
-    const i = KEYBOARD.findIndex(
-      (_, n) =>
-        degreeChord(s.key, s.scale, n as 0 | 1 | 2 | 3 | 4 | 5 | 6, s.octave)
-          .name === name,
+    const binding = playableChords(s, "song", song).find(
+      (item) => item.chord.name === name,
     );
-    return i < 0 ? "Chạm để đánh" : `Nhấn ${KEYBOARD[i]}`;
+    return binding?.code ? `Nhấn ${binding.key}` : "Chạm để đánh";
   }
   function save() {
     try {
@@ -75,6 +76,7 @@ export function SongPanel() {
         signature,
         sections: sections.map((section) => ({
           name: section.name.trim() || "Đoạn",
+          lyrics: section.lyrics,
           chords: parseProgression(section.text),
         })),
       };
@@ -105,7 +107,16 @@ export function SongPanel() {
           </button>
           <button
             className="secondary-button"
-            onClick={() => setEditing(!editing)}
+            onClick={() => {
+              if (!editing)
+                setSections(
+                  sections.map((section, i) => ({
+                    ...section,
+                    lyrics: song.sections[i]?.lyrics ?? section.lyrics,
+                  })),
+                );
+              setEditing(!editing);
+            }}
           >
             {editing ? "Đóng trình sửa" : "Sửa bài hát"}
           </button>
@@ -242,8 +253,9 @@ export function SongPanel() {
             </label>
           </div>
           <p className="muted">
-            Nhập tên hợp âm hoặc bậc: C | Am | F | G hoặc I | vi | IV | V. Thêm
-            :2 cho hai ô nhịp. Đổi giọng chính để chuyển tông cả bài.
+            Nhập tên hợp âm hoặc bậc: C | Am | E/D | G/B hoặc I | vi | IV | V.
+            Phần sau dấu / là nốt trầm. Thêm :2 cho hai ô nhịp. Đổi giọng chính
+            để chuyển tông cả bài.
           </p>
           {sections.map((section, i) => (
             <div key={i} className="section-editor">
@@ -278,6 +290,22 @@ export function SongPanel() {
               >
                 <Trash2 size={16} />
               </button>
+              <label className="lyrics-field">
+                <span>Lời bài hát · {section.name || `Đoạn ${i + 1}`}</span>
+                <textarea
+                  aria-label={`Lời bài hát đoạn ${i + 1}`}
+                  rows={5}
+                  value={section.lyrics}
+                  placeholder="Nhập hoặc dán lời bài hát tại đây…"
+                  onChange={(e) =>
+                    setSections(
+                      sections.map((x, n) =>
+                        n === i ? { ...x, lyrics: e.target.value } : x,
+                      ),
+                    )
+                  }
+                />
+              </label>
             </div>
           ))}
           <div className="song-editor-actions">
@@ -286,7 +314,7 @@ export function SongPanel() {
               onClick={() =>
                 setSections([
                   ...sections,
-                  { name: "Đoạn chuyển", text: "IV | V | I:2" },
+                  { name: "Đoạn chuyển", text: "IV | V | I:2", lyrics: "" },
                 ])
               }
             >
@@ -298,7 +326,13 @@ export function SongPanel() {
               defaultValue=""
               onChange={(e) => {
                 if (e.target.value)
-                  setSections([{ name: "Đoạn chính", text: e.target.value }]);
+                  setSections(
+                    sections.map((section, index) =>
+                      index === 0
+                        ? { ...section, text: e.target.value }
+                        : section,
+                    ),
+                  );
               }}
             >
               <option value="" disabled>
@@ -322,6 +356,7 @@ export function SongPanel() {
           )}
         </div>
       )}
+      {!editing && <LyricsEditor />}
     </section>
   );
 }

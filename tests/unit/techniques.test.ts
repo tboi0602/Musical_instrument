@@ -68,6 +68,19 @@ function context() {
 }
 beforeEach(() => vi.clearAllMocks());
 describe("Instrument scheduling", () => {
+  it("plays E/D with D underneath the piano chord and on guitar bass", () => {
+    const chord = generateChord("E", "major", 4, "D");
+    const piano = new PianoEngine(context(), {} as AudioNode);
+    piano.perform(["BLOCK"], chord, 1, 0.8, settings);
+    expect(calls.playNote.mock.calls.map((c) => c[0])).toEqual([
+      62, 64, 68, 71,
+    ]);
+    calls.playNote.mockClear();
+    const guitar = new GuitarEngine(context(), {} as AudioNode);
+    guitar.perform(["BASS"], chord, 2, 0.8, settings);
+    expect(calls.playNote.mock.calls).toHaveLength(1);
+    expect(calls.playNote.mock.calls[0][0] % 12).toBe(2);
+  });
   it("separates downstroke strings by the requested milliseconds", () => {
     const guitar = new GuitarEngine(context(), {} as AudioNode);
     guitar.perform(["DOWN"], generateChord("C"), 1, 0.8, settings);

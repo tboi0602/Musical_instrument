@@ -47,11 +47,16 @@ export function parseProgression(text: string): SongChord[] {
     const degree = ROMAN.indexOf(symbol.replace("°", "").toLowerCase());
     if (degree >= 0) return { degree: degree as ScaleDegree, bars };
     const match =
-      /^([A-G](?:#|b)?)(maj7|m7|dim|aug|sus2|sus4|add9|m|7|°|\+)?$/.exec(
+      /^([A-G](?:#|b)?)(maj7|m7|dim|aug|sus2|sus4|add9|m|7|°|\+)?(?:\/([A-G](?:#|b)?))?$/.exec(
         symbol,
       );
     if (!match) throw new Error(`Hợp âm không hợp lệ: ${symbol}`);
-    return { root: normalizeNote(match[1]), type: TYPES[match[2] ?? ""], bars };
+    return {
+      root: normalizeNote(match[1]),
+      type: TYPES[match[2] ?? ""],
+      bars,
+      ...(match[3] ? { bass: normalizeNote(match[3]) } : {}),
+    };
   });
 }
 export function resolveSongChord(
@@ -67,6 +72,9 @@ export function resolveSongChord(
         transposeNote(entry.root!, noteIndex(key) - noteIndex(sourceKey)),
         entry.type!,
         octave,
+        entry.bass
+          ? transposeNote(entry.bass, noteIndex(key) - noteIndex(sourceKey))
+          : undefined,
       );
 }
 export const DEFAULT_SONG: Song = {

@@ -280,6 +280,7 @@ function validSong(value: unknown): value is Song {
     s.sections.every(
       (section) =>
         typeof section.name === "string" &&
+        (section.lyrics === undefined || typeof section.lyrics === "string") &&
         Array.isArray(section.chords) &&
         section.chords.length > 0 &&
         section.chords.every(
@@ -287,6 +288,7 @@ function validSong(value: unknown): value is Song {
             Number.isInteger(c.bars) &&
             c.bars >= 1 &&
             c.bars <= 32 &&
+            (c.bass === undefined || NOTES.includes(c.bass)) &&
             (c.degree !== undefined
               ? Number.isInteger(c.degree) && c.degree >= 0 && c.degree <= 6
               : NOTES.includes(c.root!) &&

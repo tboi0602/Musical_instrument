@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 import { useStudio } from "../store/studio";
 import { audioEngine } from "../audio/core/AudioEngine";
-import { degreeChord } from "../musicTheory/chords";
+import { playableChords } from "../musicTheory/keyboard";
 import { ControlBar } from "./controls/ControlBar";
 import { SoundPanel } from "./controls/SoundPanel";
 import { ChordKeyboard, playChord } from "./keyboard/ChordKeyboard";
 import { Performance } from "./music/Performance";
 import { ManualPlayPanel } from "./music/ManualPlayPanel";
 import { SongPanel } from "./song/SongPanel";
-import type { ScaleDegree } from "../types/music";
+import { LyricsEditor } from "./song/LyricsEditor";
 function editable(target: EventTarget | null) {
   return (
     target instanceof HTMLElement &&
@@ -114,19 +114,15 @@ export default function Studio() {
         stopAudio();
         return;
       }
-      const index = [
-        "KeyA",
-        "KeyS",
-        "KeyD",
-        "KeyF",
-        "KeyG",
-        "KeyH",
-        "KeyJ",
-      ].indexOf(e.code);
-      if (index < 0) return;
+      const state = useStudio.getState();
+      const binding = playableChords(
+        state.settings,
+        state.mode,
+        state.song,
+      ).find((item) => item.code === e.code && item.shift === e.shiftKey);
+      if (!binding) return;
       e.preventDefault();
-      const s = useStudio.getState().settings;
-      const chord = degreeChord(s.key, s.scale, index as ScaleDegree, s.octave);
+      const chord = binding.chord;
       held.set(e.code, chord.name);
       playChord(chord);
     };
@@ -274,6 +270,7 @@ export default function Studio() {
         <Performance />
         <ChordKeyboard />
         {mode === "song" && hydrated && <SongPanel />}
+        {mode === "free" && hydrated && <LyricsEditor />}
         <div className="lower-workspace">
           <ManualPlayPanel />
           <SoundPanel />

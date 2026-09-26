@@ -81,7 +81,12 @@ export class GuitarEngine implements Instrument {
         : action.startsWith("PICK_")
           ? all.filter((x) => x.string === Number(action.slice(5)))
           : ["BASS", "ROOT", "LOW"].includes(action)
-            ? [bassString(v, chord.root)].filter((x) => x !== undefined)
+            ? [
+                bassString(
+                  v,
+                  action === "ROOT" ? chord.root : (chord.bass ?? chord.root),
+                ),
+              ].filter((x) => x !== undefined)
             : [
                 all[
                   action === "MID" ? Math.floor(all.length / 2) : all.length - 1

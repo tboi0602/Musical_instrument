@@ -1,5 +1,74 @@
 import { test, expect, type Page } from "@playwright/test";
 
+test("ô lời bài hát hiện trực tiếp, tự lưu và đồng bộ với trình sửa", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const lyrics = page.getByLabel("Nhập lời bài hát đoạn 1", { exact: true });
+  await lyrics.fill("Lời hát của tôi\nDòng thứ hai");
+  await page.reload();
+  await expect(lyrics).toHaveValue("Lời hát của tôi\nDòng thứ hai");
+  await page.getByRole("button", { name: "Bài hát", exact: true }).click();
+  await lyrics.fill("Lời mới\nGiữ nguyên xuống dòng");
+  await page.getByRole("button", { name: "Sửa bài hát", exact: true }).click();
+  await expect(
+    page.getByLabel("Lời bài hát đoạn 1", { exact: true }),
+  ).toHaveValue("Lời mới\nGiữ nguyên xuống dòng");
+  await page.getByRole("button", { name: "Lưu bài hát", exact: true }).click();
+  await expect(lyrics).toHaveValue("Lời mới\nGiữ nguyên xuống dòng");
+});
+
+test("lưu, mở lại và chuyển tông hợp âm E/D", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Bài hát", exact: true }).click();
+  await page.getByRole("button", { name: "Sửa bài hát", exact: true }).click();
+  await page.getByLabel("Hợp âm đoạn 1").fill("E/D:2 | C/G");
+  await page
+    .getByLabel("Lời bài hát đoạn 1")
+    .fill("Một giai điệu mới\nMình tự chơi theo nhịp riêng.");
+  await page.getByRole("button", { name: "Lưu bài hát", exact: true }).click();
+  await expect(page.locator(".song-card").first()).toContainText("E/D");
+  await page.reload();
+  await page.getByRole("button", { name: "Bài hát", exact: true }).click();
+  await page.getByRole("button", { name: "Sửa bài hát", exact: true }).click();
+  await expect(page.getByLabel("Hợp âm đoạn 1")).toHaveValue("E/D:2 | C/G");
+  await expect(page.getByLabel("Lời bài hát đoạn 1")).toHaveValue(
+    "Một giai điệu mới\nMình tự chơi theo nhịp riêng.",
+  );
+  await page
+    .getByRole("button", { name: "Đóng trình sửa", exact: true })
+    .click();
+  await page.getByLabel("GIỌNG", { exact: true }).selectOption("G");
+  await expect(page.locator(".song-card").first()).toContainText("B/A");
+  await enable(page);
+  await expect(
+    page.getByRole("button", { name: "Đánh B/A, phím K", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("k");
+  await expect(page.getByTestId("current-chord")).toHaveText("B/A");
+  await expect(page.locator(".song-lyrics")).toContainText("Một giai điệu mới");
+  expect(
+    await page
+      .locator(".song-cards")
+      .evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+      ),
+  ).toBe(3);
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page
+      .locator(".song-cards")
+      .evaluate(
+        (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+      ),
+  ).toBe(2);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});
+
 async function instrumentAudio(page: Page) {
   await page.addInitScript(`
     window.__attacks = 0;

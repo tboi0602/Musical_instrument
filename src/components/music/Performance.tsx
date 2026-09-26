@@ -3,7 +3,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { ArrowRight, AudioLines } from "lucide-react";
 import { audioEngine } from "../../audio/core/AudioEngine";
 import { useStudio } from "../../store/studio";
-import { degreeChord } from "../../musicTheory/chords";
+import { degreeChord, chordBassMidi } from "../../musicTheory/chords";
 import { midiName } from "../../musicTheory/notes";
 import { guitarVoicing } from "../../audio/instruments/guitar/GuitarVoicing";
 import { TECHNIQUE_VI, manualTechnique } from "../../audio/manual";
@@ -24,6 +24,9 @@ export function Performance() {
     () => guitarVoicing(chord, s.octave),
     [chord, s.octave],
   );
+  const soundingNotes = chord.bass
+    ? [chordBassMidi(chord), ...chord.notes]
+    : chord.notes;
   return (
     <section className="performance">
       <div className="chord-display">
@@ -36,7 +39,10 @@ export function Performance() {
           <span>{chord.name.slice(chord.root.length)}</span>
         </div>
         <div className="chord-notes">
-          {chord.notes.map((n) => midiName(n).replace(/\d/g, "")).join("  ·  ")}
+          {soundingNotes
+            .map((n) => midiName(n).replace(/\d/g, ""))
+            .join("  ·  ")}
+          {chord.bass && <span>Nốt trầm: {chord.bass}</span>}
           <span>
             {chord.type === "major"
               ? "Hợp âm trưởng"
@@ -114,7 +120,7 @@ export function Performance() {
                 return (
                   <div
                     key={n}
-                    className={`${black ? "black-key" : "white-key"} ${chord.notes.some((note) => note % 12 === n % 12) ? "note-on" : ""}`}
+                    className={`${black ? "black-key" : "white-key"} ${soundingNotes.some((note) => note % 12 === n % 12) ? "note-on" : ""}`}
                   >
                     {!black && <span>{midiName(n).replace(/\d/g, "")}</span>}
                   </div>

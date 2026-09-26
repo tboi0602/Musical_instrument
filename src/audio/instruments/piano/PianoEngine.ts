@@ -1,6 +1,6 @@
 import type { Chord, Settings, Technique } from "../../../types/music";
 import type { Instrument } from "../Instrument";
-import { invert, voiceLead } from "../../../musicTheory/chords";
+import { invert, voiceLead, chordBassMidi } from "../../../musicTheory/chords";
 import { ModeledSource } from "../../core/SoundSource";
 export class PianoEngine implements Instrument {
   private source: ModeledSource;
@@ -41,13 +41,18 @@ export class PianoEngine implements Instrument {
       this.name = key;
     }
     const n = this.notes;
+    const bass = chordBassMidi(chord, n);
     for (const action of actions) {
       if (action === "REST") continue;
       const notes =
         action === "BLOCK"
-          ? n
+          ? chord.bass
+            ? [bass, ...n]
+            : n
           : action === "OCTAVE"
-            ? [chord.notes[0] - 12, chord.notes[0], ...n.slice(1)]
+            ? chord.bass
+              ? [bass, ...n]
+              : [chord.notes[0] - 12, chord.notes[0], ...n.slice(1)]
             : [
                 action === "THIRD" || action === "MID"
                   ? n[1]
@@ -56,7 +61,9 @@ export class PianoEngine implements Instrument {
                     : action === "TOP" || action === "HIGH"
                       ? n[0] + 12
                       : action === "LOW"
-                        ? chord.notes[0] - 12
+                        ? chord.bass
+                          ? bass
+                          : chord.notes[0] - 12
                         : n[0],
               ];
       notes.forEach((note) =>

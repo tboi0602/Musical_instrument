@@ -1,5 +1,11 @@
 # Chordroom — Một phím, một lần đánh
 
+Ô **Lời bài hát** hiển thị trực tiếp bên dưới bàn phím hợp âm ở màn hình chính và trong chế độ Bài hát. Nhập hoặc dán lời vào từng đoạn; nội dung tự lưu trên thiết bị, không cần mở trình sửa hay bấm nút lưu.
+
+Trong **Bài hát → Sửa bài hát**, mỗi đoạn có ô **Lời bài hát**. Lời được lưu cùng hợp âm, giữ nguyên xuống dòng và hiển thị bên dưới để vừa nhìn vừa chơi. Toàn bộ hợp âm của bài hiện thành lưới 3 cột trên máy tính, 2 cột trên điện thoại. Các hợp âm quen thuộc giữ phím A/S/D/F/G/H/J; hợp âm khác được gán K/L/Q… và hiển thị phím ngay trên thẻ. Hợp âm trùng nhau dùng chung phím.
+
+Hỗ trợ hợp âm có nốt trầm riêng (slash chord): nhập `E/D`, `C/G`, `F#m/C#` hoặc `E/D:2` trong phần sửa bài hát. `E/D` phát hợp âm Mi trưởng với Rê ở bè trầm. Khi chuyển tông, cả hợp âm và nốt trầm đều được chuyển theo.
+
 Phòng nhạc guitar và piano bằng tiếng Việt. **Mỗi lần nhấn phím chỉ đánh một hợp âm một lần.** Người chơi tự quyết định nhịp, khoảng nghỉ và thời điểm chuyển hợp âm.
 
 ## Chạy ứng dụng
@@ -23,14 +29,14 @@ Mở http://localhost:3000 và nhấn **Bật âm thanh**. Nếu PowerShell ch�
 - `Space` dừng âm; `Esc` tắt khẩn cấp. Không bắt phím khi đang nhập liệu.
 
 | Phím | Đô trưởng | Sol trưởng | La thứ tự nhiên |
-| --- | --- | --- | --- |
-| A | C | G | Am |
-| S | Dm | Am | Bdim |
-| D | Em | Bm | C |
-| F | F | C | Dm |
-| G | G | D | Em |
-| H | Am | Em | F |
-| J | Bdim | F#dim | G |
+| ---- | --------- | ---------- | --------------- |
+| A    | C         | G          | Am              |
+| S    | Dm        | Am         | Bdim            |
+| D    | Em        | Bm         | C               |
+| F    | F         | C          | Dm              |
+| G    | G         | D          | Em              |
+| H    | Am        | Em         | F               |
+| J    | Bdim      | F#dim      | G               |
 
 ## Chọn cách đánh
 

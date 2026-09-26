@@ -5,10 +5,12 @@ export const transposeNote = (note: Note, semitones: number): Note =>
   NOTES[mod(noteIndex(note) + semitones)];
 export function transposeChord(chord: Chord, semitones: number): Chord {
   const root = transposeNote(chord.root, semitones);
+  const bass = chord.bass ? transposeNote(chord.bass, semitones) : undefined;
   return {
     ...chord,
     root,
-    name: root + SUFFIX[chord.type],
+    ...(bass ? { bass } : {}),
+    name: root + SUFFIX[chord.type] + (bass ? `/${bass}` : ""),
     notes: chord.notes.map((n) => n + semitones),
   };
 }

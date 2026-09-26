@@ -14,6 +14,7 @@ export type ChordType =
   | "add9";
 export type ScaleDegree = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export interface Chord {
+  bass?: Note;
   root: Note;
   type: ChordType;
   name: string;
@@ -72,12 +73,14 @@ export interface GuitarVoicing {
   strings: GuitarString[];
 }
 export interface SongChord {
+  bass?: Note;
   degree?: ScaleDegree;
   root?: Note;
   type?: ChordType;
   bars: number;
 }
 export interface SongSection {
+  lyrics?: string;
   name: string;
   chords: SongChord[];
 }

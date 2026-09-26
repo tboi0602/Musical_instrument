@@ -26,7 +26,11 @@ export const OPEN_VOICINGS: Record<string, (number | null)[]> = {
 };
 export function guitarVoicing(chord: Chord, octave = 4): GuitarVoicing {
   let frets = OPEN_VOICINGS[chord.name];
-  if (!frets && (chord.type === "major" || chord.type === "minor")) {
+  if (
+    !frets &&
+    !chord.bass &&
+    (chord.type === "major" || chord.type === "minor")
+  ) {
     const eFret = mod(noteIndex(chord.root) - 4);
     const aFret = mod(noteIndex(chord.root) - 9);
     frets =
@@ -38,7 +42,12 @@ export function guitarVoicing(chord: Chord, octave = 4): GuitarVoicing {
   }
   if (!frets) {
     // Search compact chord-tone voicings, enforcing a root bass and full formula coverage.
-    const pcs = [...new Set(chord.notes.map((n) => mod(n)))];
+    const pcs = [
+      ...new Set([
+        ...chord.notes.map((n) => mod(n)),
+        noteIndex(chord.bass ?? chord.root),
+      ]),
+    ];
     let best: (number | null)[] | undefined;
     let bestCost = Infinity;
     for (let base = 0; base <= 12; base++) {
@@ -61,7 +70,7 @@ export function guitarVoicing(chord: Chord, octave = 4): GuitarVoicing {
         );
         if (
           sounding.length < 3 ||
-          mod(sounding[0]) !== noteIndex(chord.root) ||
+          mod(Math.min(...sounding)) !== noteIndex(chord.bass ?? chord.root) ||
           !pcs.every((pc) => sounding.some((n) => mod(n) === pc))
         )
           return;
@@ -106,7 +115,7 @@ export function bassString(
   voicing: GuitarVoicing,
   root: string,
 ): GuitarString | undefined {
-  const playable = strumStrings(voicing);
+  const playable = strumStrings(voicing).sort((a, b) => a.midi! - b.midi!);
   return (
     playable.find((s) => mod(s.midi!) === noteIndex(root as Chord["root"])) ??
     playable[0]

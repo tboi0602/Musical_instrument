@@ -3,9 +3,9 @@ import { useSyncExternalStore } from "react";
 import { Keyboard } from "lucide-react";
 import { audioEngine } from "../../audio/core/AudioEngine";
 import { useStudio } from "../../store/studio";
-import { degreeChord } from "../../musicTheory/chords";
-import { KEYBOARD, ROMANS } from "../../musicTheory/scales";
-import type { Chord, ScaleDegree } from "../../types/music";
+import { playableChords } from "../../musicTheory/keyboard";
+import { ROMANS } from "../../musicTheory/scales";
+import type { Chord } from "../../types/music";
 export function playChord(chord: Chord) {
   try {
     audioEngine.trigger(chord);
@@ -18,6 +18,8 @@ export function playChord(chord: Chord) {
 }
 export function ChordKeyboard() {
   const s = useStudio((x) => x.settings);
+  const mode = useStudio((x) => x.mode),
+    song = useStudio((x) => x.song);
   const transport = useSyncExternalStore(
     audioEngine.subscribe,
     audioEngine.getSnapshot,
@@ -33,15 +35,14 @@ export function ChordKeyboard() {
         </div>
         <span className="tag">MỖI LẦN NHẤN = MỘT LẦN ĐÁNH</span>
       </div>
-      <div className="chord-pads">
-        {KEYBOARD.map((key, i) => {
-          const chord = degreeChord(s.key, s.scale, i as ScaleDegree, s.octave);
+      <div className={`chord-pads ${mode === "song" ? "song-chord-pads" : ""}`}>
+        {playableChords(s, mode, song).map(({ key, chord }) => {
           const active =
             transport.playing && transport.current?.name === chord.name;
           const queued = transport.queued?.name === chord.name;
           return (
             <button
-              key={key}
+              key={chord.name}
               aria-label={`Đánh ${chord.name}, phím ${key}`}
               aria-pressed={active}
               className={`chord-pad ${active ? "active" : ""} ${queued ? "queued" : ""}`}
@@ -65,7 +66,13 @@ export function ChordKeyboard() {
               }}
             >
               <span className="pad-top">
-                <span>{ROMANS[s.scale][i]}</span>
+                <span>
+                  {chord.degree !== undefined
+                    ? ROMANS[s.scale][chord.degree]
+                    : chord.bass
+                      ? `Trầm ${chord.bass}`
+                      : "Hợp âm"}
+                </span>
                 <kbd>{key}</kbd>
               </span>
               <strong>{chord.name}</strong>
@@ -87,8 +94,12 @@ export function ChordKeyboard() {
       </div>
       <div className="keyboard-caption">
         <span>
-          <span className="key-hint">A S D F G H J</span> để đánh ·{" "}
-          <kbd>Space</kbd> để dừng
+          <span className="key-hint">
+            {mode === "song"
+              ? "Nhấn phím ghi trên từng hợp âm"
+              : "A S D F G H J"}
+          </span>{" "}
+          để đánh · <kbd>Space</kbd> để dừng
         </span>
         <span>Cùng phím bấm cho mọi giọng.</span>
       </div>
